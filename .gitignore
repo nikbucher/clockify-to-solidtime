@@ -1,0 +1,8 @@
+.*
+!.editorconfig
+!.gitignore
+
+/config/
+build/
+generated/
+target/
