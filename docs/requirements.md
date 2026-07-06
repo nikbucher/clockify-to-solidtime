@@ -6,12 +6,11 @@ Requirement status records implementation progress: `Open` is not started, `In P
 
 ## Functional Requirements
 
-| ID     | Title                      | User Story                                                                                                                                                                                                   | Priority | Status      |
-|--------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-------------|
-| FR-001 | Validate Configuration     | As a user, I want the system to validate my Clockify and Solidtime configuration before running commands that access either service so that setup problems are caught before comparison or migration starts. | High     | Implemented |
-| FR-002 | Migrate Time Tracking Data | As a user, I want to migrate supported Clockify data to Solidtime so that I do not have to recreate clients, projects, tasks, tags, and time entries.                                                        | High     | Implemented |
-| FR-003 | Compare Project Setup      | As a user, I want to compare Clockify and Solidtime projects and their tasks side by side so that I can verify how project structures match between both systems.                                            | Medium   | Implemented |
-| FR-004 | Generate Shell Completions | As a user, I want to generate a shell completion script for my shell so that I can tab-complete commands and options.                                                                                        | Low      | Implemented |
+| ID     | Title                      | User Story                                                                                                                                                                                                   | Priority | Status |
+|--------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|--------|
+| FR-001 | Validate Configuration     | As a user, I want the system to validate my Clockify and Solidtime configuration before running commands that access either service so that setup problems are caught before comparison or migration starts. | High     | In Progress |
+| FR-002 | Migrate Time Tracking Data | As a user, I want to migrate supported Clockify data to Solidtime so that I do not have to recreate clients, projects, tasks, tags, and time entries.                                                        | High     | Open   |
+| FR-003 | Compare Project Setup      | As a user, I want to compare Clockify and Solidtime projects and their tasks side by side so that I can verify how project structures match between both systems.                                            | Medium   | Open   |
 
 ## Non-Functional Requirements
 
