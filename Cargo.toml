@@ -1,6 +1,6 @@
 [package]
 name = "clockify-to-solidtime"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Migrate time-tracking data from Clockify to Solidtime via their APIs"
 authors = ["Niklaus Bucher"]
