@@ -29,14 +29,14 @@ Create a Clockify API key and a Solidtime API token from the account or develope
 
 Download the archive for your platform from [GitHub Releases](https://github.com/nikbucher/clockify-to-solidtime/releases).
 
-| Platform            | Target                      | Archive                                                  |
-|---------------------|-----------------------------|----------------------------------------------------------|
-| Linux x86_64        | `x86_64-unknown-linux-gnu`  | `clockify-to-solidtime-x86_64-unknown-linux-gnu.tar.gz`  |
-| Linux arm64         | `aarch64-unknown-linux-gnu` | `clockify-to-solidtime-aarch64-unknown-linux-gnu.tar.gz` |
-| macOS Intel         | `x86_64-apple-darwin`       | `clockify-to-solidtime-x86_64-apple-darwin.tar.gz`       |
-| macOS Apple silicon | `aarch64-apple-darwin`      | `clockify-to-solidtime-aarch64-apple-darwin.tar.gz`      |
-| Windows x86_64      | `x86_64-pc-windows-msvc`    | `clockify-to-solidtime-x86_64-pc-windows-msvc.zip`       |
-| Windows arm64       | `aarch64-pc-windows-msvc`   | `clockify-to-solidtime-aarch64-pc-windows-msvc.zip`      |
+| Platform | Target | Archive |
+|----------|--------|---------|
+| Linux x86_64 | `x86_64-unknown-linux-gnu` | `clockify-to-solidtime-x86_64-unknown-linux-gnu.tar.gz` |
+| Linux arm64 | `aarch64-unknown-linux-gnu` | `clockify-to-solidtime-aarch64-unknown-linux-gnu.tar.gz` |
+| macOS Intel | `x86_64-apple-darwin` | `clockify-to-solidtime-x86_64-apple-darwin.tar.gz` |
+| macOS Apple silicon | `aarch64-apple-darwin` | `clockify-to-solidtime-aarch64-apple-darwin.tar.gz` |
+| Windows x86_64 | `x86_64-pc-windows-msvc` | `clockify-to-solidtime-x86_64-pc-windows-msvc.zip` |
+| Windows arm64 | `aarch64-pc-windows-msvc` | `clockify-to-solidtime-aarch64-pc-windows-msvc.zip` |
 
 ### Build from source
 
