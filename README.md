@@ -165,33 +165,19 @@ Only `Clockify_Project` and `Solidtime_Project` are required by the parser. Incl
 
 Mapping entries fail closed: missing records, ambiguous name matches, tasks outside the mapped project, conflicting CSV rows, or conflicts with `migration-state.json` stop the command instead of guessing.
 
-Project rename mapping:
+Common examples:
 
-```csv
-Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
-Legacy Website,,Website Relaunch,
-```
-
-Task rename mapping:
-
-```csv
-Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
-Website Relaunch,QA,Website Relaunch,Testing
-```
-
-Default task mapping for Clockify entries without tasks:
-
-```csv
-Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
-Website Relaunch,,Website Relaunch,General
-```
+| Use case                                        | `Clockify_Project` | `Clockify_Task` | `Solidtime_Project` | `Solidtime_Task` |
+|-------------------------------------------------|--------------------|-----------------|---------------------|------------------|
+| Project rename                                  | `Legacy Website`   |                 | `Website Relaunch`  |                  |
+| Task rename                                     | `Website Relaunch` | `QA`            | `Website Relaunch`  | `Testing`        |
+| Default task for Clockify entries without tasks | `Website Relaunch` |                 | `Website Relaunch`  | `General`        |
 
 ID-based mapping for ambiguous names:
 
-```csv
-Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task,Clockify_Project_ID,Clockify_Task_ID,Solidtime_Project_ID,Solidtime_Task_ID
-Website Relaunch,QA,Website Relaunch,Testing,clk_project_123,clk_task_456,sol_project_789,sol_task_012
-```
+| `Clockify_Project` | `Clockify_Task` | `Solidtime_Project` | `Solidtime_Task` | `Clockify_Project_ID` | `Clockify_Task_ID` | `Solidtime_Project_ID` | `Solidtime_Task_ID` |
+|--------------------|-----------------|---------------------|------------------|-----------------------|--------------------|------------------------|---------------------|
+| `Website Relaunch` | `QA`            | `Website Relaunch`  | `Testing`        | `clk_project_123`     | `clk_task_456`     | `sol_project_789`      | `sol_task_012`      |
 
 Recommended workflow:
 
