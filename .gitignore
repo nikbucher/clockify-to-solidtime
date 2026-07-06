@@ -1,9 +1,22 @@
 .*
 !.editorconfig
 !.gitignore
+!.gitattributes
+!.commitlintrc.yml
+!.github/
+
+!.agents/
+.agents/plans
 !.claude
+.claude/settings.local.json
+!.codex
+!.env.example
+
 
 /config/
 build/
 generated/
 target/
+
+config.toml
+migration-state.json

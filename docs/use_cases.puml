@@ -1,0 +1,19 @@
+@startuml Use Cases Overview
+left to right direction
+
+actor "User" as user
+
+rectangle "Clockify to Solidtime Migrator" {
+    usecase "UC-001\nValidate Configuration" as UC001
+    usecase "UC-002\nCompare Project Setup" as UC002
+    usecase "UC-003\nMigrate Time Tracking Data" as UC003
+}
+
+user --> UC001
+user --> UC002
+user --> UC003
+
+UC002 ..> UC001 : <<include>>
+UC003 ..> UC001 : <<include>>
+
+@enduml
