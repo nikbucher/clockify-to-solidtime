@@ -54,26 +54,84 @@ cd clockify-to-solidtime
 cargo build --release
 ```
 
-## Workflow
+From a source checkout, you can run the same commands with `cargo run --`, for example:
 
-1. Configure your Clockify and Solidtime API keys.
-2. Run a dry-run to preview what will be migrated.
-3. Execute the migration and review the summary.
+```sh
+cargo run -- validate
+```
 
-## Usage
+## Configuration
+
+Provide required credentials through exported environment variables, a `.env` file, or a TOML config file:
 
 ```sh
 export CLOCKIFY_API_KEY="..."
 export SOLIDTIME_API_TOKEN="..."
-
-cargo run -- validate
-cargo run -- compare --ignore-archived
-cargo run -- migrate --dry-run --from 2024-01-01T00:00:00Z --to 2024-02-01T00:00:00Z
-cargo run -- migrate --from 2024-01-01T00:00:00Z --to 2024-02-01T00:00:00Z
-cargo run -- migrate --ignore-archived --from 2024-01-01T00:00:00Z --to 2024-02-01T00:00:00Z
 ```
 
-### Shell Completions
+Optional environment variables:
+
+- `CLOCKIFY_WORKSPACE_ID` - overrides the user's default Clockify workspace.
+- `SOLIDTIME_ORGANIZATION_ID` - required when the Solidtime token has more than one membership.
+- `CLOCKIFY_BASE_URL` and `SOLIDTIME_BASE_URL` - override API base URLs.
+
+Alternatively, put the variables in a `.env` file in the working directory. Use `.env.example` as a template:
+
+```dotenv
+CLOCKIFY_API_KEY=...
+SOLIDTIME_API_TOKEN=...
+```
+
+Real environment variables and `--config` values take precedence over `.env` values.
+
+The same keys can be provided via `--config config.toml`:
+
+```toml
+clockify_api_key = "..."
+solidtime_api_token = "..."
+clockify_workspace_id = "..."
+solidtime_organization_id = "..."
+```
+
+Migration state is stored in `migration-state.json` by default. Override it with `--state`.
+
+Use `--ignore-archived` to skip archived Clockify projects, their tasks, and their time entries.
+
+## Workflow
+
+1. Configure your Clockify and Solidtime API keys.
+2. Run `validate` to check credentials and service access.
+3. Run `compare` to preview project and task alignment.
+4. Run `migrate --dry-run` to preview writes.
+5. Run `migrate` and review the summary.
+
+## Usage
+
+Check credentials and reachability:
+
+```sh
+clockify-to-solidtime validate
+```
+
+Preview project and task alignment:
+
+```sh
+clockify-to-solidtime compare --ignore-archived
+```
+
+Preview migration writes:
+
+```sh
+clockify-to-solidtime migrate --dry-run --from 2024-01-01 --to 2024-02-01
+```
+
+Run the migration:
+
+```sh
+clockify-to-solidtime migrate --from 2024-01-01 --to 2024-02-01
+```
+
+### Shell completions
 
 Homebrew installs bash, zsh, and fish completions automatically.
 
@@ -102,8 +160,8 @@ clockify-to-solidtime completions powershell | Out-String | Invoke-Expression
 ### Validate
 
 ```sh
-cargo run -- validate
-cargo run -- validate --config config.toml
+clockify-to-solidtime validate
+clockify-to-solidtime validate --config config.toml
 ```
 
 Checks that required configuration is present and that the selected Clockify workspace and Solidtime organization are reachable.
@@ -111,9 +169,9 @@ Checks that required configuration is present and that the selected Clockify wor
 ### Compare
 
 ```sh
-cargo run -- compare
-cargo run -- compare --ignore-archived
-cargo run -- compare --config config.toml --mapping project-task-mapping.csv
+clockify-to-solidtime compare
+clockify-to-solidtime compare --ignore-archived
+clockify-to-solidtime compare --config config.toml --mapping project-task-mapping.csv
 ```
 
 Shows a read-only, side-by-side comparison of Clockify and Solidtime projects and tasks. It accepts `--config`, `--mapping`, and `--ignore-archived`. See [`docs/use_cases/UC-002-compare-project-setup.md`](docs/use_cases/UC-002-compare-project-setup.md) for the full output format.
@@ -121,11 +179,15 @@ Shows a read-only, side-by-side comparison of Clockify and Solidtime projects an
 ### Migrate
 
 ```sh
-cargo run -- migrate --dry-run --from 2024-01-01T00:00:00Z --to 2024-02-01T00:00:00Z
-cargo run -- migrate --from 2024-01-01T00:00:00Z --to 2024-02-01T00:00:00Z
+clockify-to-solidtime migrate --dry-run --from 2024-01-01 --to 2024-02-01
+clockify-to-solidtime migrate --from 2024-01-01 --to 2024-02-01
 ```
 
 Runs the Clockify to Solidtime migration. Use `--dry-run` before a real migration to preview planned changes.
+
+`--from` and `--to` are optional. `--from` defaults to `2000-01-01T00:00:00Z`, and `--to` defaults to the current time, so omitting both migrates all entries up to now. `--from` is inclusive and `--to` is exclusive. Each accepts a short date such as `2024-01-01` or a full RFC3339 timestamp such as `2024-01-01T00:00:00Z`.
+
+On a real run, `--no-create-structure` skips creating missing clients, projects, tasks, and tags. The migration stops if required Solidtime structure is missing.
 
 ### Mapping CSV for projects and tasks
 
@@ -186,34 +248,6 @@ Recommended workflow:
 3. Run `clockify-to-solidtime compare --mapping project-task-mapping.csv`.
 4. Run `clockify-to-solidtime migrate --dry-run --mapping project-task-mapping.csv`.
 5. Run `clockify-to-solidtime migrate --mapping project-task-mapping.csv` only after the dry run looks right.
-
-Optional environment variables:
-
-- `CLOCKIFY_WORKSPACE_ID` - overrides the user's default Clockify workspace.
-- `SOLIDTIME_ORGANIZATION_ID` - required when the Solidtime token has more than one membership.
-- `CLOCKIFY_BASE_URL` and `SOLIDTIME_BASE_URL` - override API base URLs.
-
-Alternatively, put the variables in a `.env` file in the project directory. Use `.env.example` as a template:
-
-```dotenv
-CLOCKIFY_API_KEY=...
-SOLIDTIME_API_TOKEN=...
-```
-
-Real environment variables and `--config` values take precedence over `.env` values.
-
-The same keys can be provided via `--config config.toml`:
-
-```toml
-clockify_api_key = "..."
-solidtime_api_token = "..."
-clockify_workspace_id = "..."
-solidtime_organization_id = "..."
-```
-
-Migration state is stored in `migration-state.json` by default. Override it with `--state`.
-
-Use `--ignore-archived` to skip archived Clockify projects, their tasks, and their time entries.
 
 ## Safe repeatable runs
 
