@@ -26,6 +26,16 @@ Configuration values and their sources are the same as UC-001 (Validate Configur
 
 `--mapping <path>` optionally supplies a CSV file pairing Clockify project/task names or IDs with existing Solidtime project/task names or IDs, using the same file format as the migrate command's mapping file. Only entries that resolve to projects and tasks retrieved from both systems are used; the comparison never creates a project or task to satisfy a mapping entry. `--ignore-archived` excludes archived Clockify projects and their tasks from the comparison; archived projects are included by default.
 
+### Mapping File Format
+
+The mapping file is a CSV. The parser requires `Clockify_Project` and `Solidtime_Project`; task and ID columns are optional. For ordinary name-based project and task mappings, use this header:
+
+```csv
+Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
+```
+
+Each row maps one Clockify project to one Solidtime project, and may also map one Clockify task to one Solidtime task within that project. Blank task values are allowed for project-only rows. The optional columns `Clockify_Project_ID`, `Clockify_Task_ID`, `Solidtime_Project_ID`, and `Solidtime_Task_ID` may be added to the same CSV; when present, IDs take precedence over their matching name columns. A row that has a Solidtime task but no Clockify task is treated as a project default task row by migration; compare resolves only the project mapping and ignores that row for task pairing. Missing, ambiguous, out-of-project, or conflicting rows fail the comparison instead of being guessed. See the README for examples.
+
 ## Output Format
 
 The comparison output is plain text with these sections:

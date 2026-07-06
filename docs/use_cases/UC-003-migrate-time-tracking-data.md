@@ -27,6 +27,16 @@ Configuration values and their sources are the same as UC-001 (Validate Configur
 
 `--dry-run` previews the migration by reading and reconciling data without changing Solidtime or the local migration state. `--state <path>` selects the local migration state file; when omitted, the default is `migration-state.json`. `--mapping <path>` optionally supplies a CSV file pairing Clockify project/task names or IDs with existing Solidtime project/task names or IDs, using the same mapping file format as UC-002 (Compare Project Setup). `--no-create-structure` requires missing Solidtime clients, projects, tasks, and tags to already exist or be supplied by mapping instead of being created during a real migration. `--ignore-archived` excludes archived Clockify projects, their tasks, and their time entries from migration. `--from <timestamp>` is the inclusive migration start time. `--to <timestamp>` is the exclusive migration end time.
 
+### Mapping File Format
+
+The mapping file is a CSV. The parser requires `Clockify_Project` and `Solidtime_Project`; task and ID columns are optional. For ordinary name-based project and task mappings, use this header:
+
+```csv
+Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
+```
+
+Each row maps one Clockify project to one Solidtime project, and may also map one Clockify task to one Solidtime task within that project. Blank task values are allowed for project-only rows. The optional columns `Clockify_Project_ID`, `Clockify_Task_ID`, `Solidtime_Project_ID`, and `Solidtime_Task_ID` may be added to the same CSV; when present, IDs take precedence over their matching name columns. A row that has a Solidtime task but no Clockify task defines the default Solidtime task for Clockify time entries under that project that do not have a Clockify task. Missing, ambiguous, out-of-project, or conflicting rows fail the migration instead of being guessed or created from the mapping row. See the README for examples.
+
 ## Migrated Data
 
 | Clockify data             | Solidtime data            | Migration behavior                                         |

@@ -113,7 +113,7 @@ Checks that required configuration is present and that the selected Clockify wor
 ```sh
 cargo run -- compare
 cargo run -- compare --ignore-archived
-cargo run -- compare --config config.toml --mapping project-mapping.csv
+cargo run -- compare --config config.toml --mapping project-task-mapping.csv
 ```
 
 Shows a read-only, side-by-side comparison of Clockify and Solidtime projects and tasks. It accepts `--config`, `--mapping`, and `--ignore-archived`. See [`docs/use_cases/UC-002-compare-project-setup.md`](docs/use_cases/UC-002-compare-project-setup.md) for the full output format.
@@ -126,6 +126,80 @@ cargo run -- migrate --from 2024-01-01T00:00:00Z --to 2024-02-01T00:00:00Z
 ```
 
 Runs the Clockify to Solidtime migration. Use `--dry-run` before a real migration to preview planned changes.
+
+### Mapping CSV for projects and tasks
+
+Use `--mapping project-task-mapping.csv` with `compare` or `migrate` when Clockify and Solidtime projects or tasks should be paired differently than the default name-based matching. The filename is only an example; any CSV path can be used.
+
+This file is useful for:
+
+- Renamed projects or tasks.
+- Duplicate or ambiguous project or task names.
+- Assigning a default Solidtime task to Clockify time entries that have no task.
+
+For most mappings, use this header:
+
+```csv
+Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
+```
+
+Columns:
+
+| Column              | Required in header | Value may be blank | Description                                                                                                                                                                              |
+|---------------------|--------------------|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Clockify_Project`  | Yes                | No                 | Clockify project name.                                                                                                                                                                   |
+| `Clockify_Task`     | No                 | Yes                | Clockify task name. Leave blank for project-only rows or default-task rows.                                                                                                              |
+| `Solidtime_Project` | Yes                | No                 | Solidtime project name.                                                                                                                                                                  |
+| `Solidtime_Task`    | No                 | Yes                | Solidtime task name. Leave blank for project-only rows. Set this with a blank `Clockify_Task` to define the migration default task for un-tasked Clockify entries in the mapped project. |
+
+When names are duplicated or ambiguous, add any of these optional ID columns to the same CSV:
+
+| Optional column        | Takes precedence over |
+|------------------------|-----------------------|
+| `Clockify_Project_ID`  | `Clockify_Project`    |
+| `Clockify_Task_ID`     | `Clockify_Task`       |
+| `Solidtime_Project_ID` | `Solidtime_Project`   |
+| `Solidtime_Task_ID`    | `Solidtime_Task`      |
+
+Only `Clockify_Project` and `Solidtime_Project` are required by the parser. Include the task columns anyway unless you are intentionally creating a project-only mapping file; the four-column header is easier to read and matches the examples below.
+
+Mapping entries fail closed: missing records, ambiguous name matches, tasks outside the mapped project, conflicting CSV rows, or conflicts with `migration-state.json` stop the command instead of guessing.
+
+Project rename mapping:
+
+```csv
+Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
+Legacy Website,,Website Relaunch,
+```
+
+Task rename mapping:
+
+```csv
+Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
+Website Relaunch,QA,Website Relaunch,Testing
+```
+
+Default task mapping for Clockify entries without tasks:
+
+```csv
+Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
+Website Relaunch,,Website Relaunch,General
+```
+
+ID-based mapping for ambiguous names:
+
+```csv
+Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task,Clockify_Project_ID,Clockify_Task_ID,Solidtime_Project_ID,Solidtime_Task_ID
+Website Relaunch,QA,Website Relaunch,Testing,clk_project_123,clk_task_456,sol_project_789,sol_task_012
+```
+
+Recommended workflow:
+
+1. Run `clockify-to-solidtime compare`.
+2. Create `project-task-mapping.csv` for renamed or ambiguous projects and tasks.
+3. Run `clockify-to-solidtime compare --mapping project-task-mapping.csv`.
+4. Run `clockify-to-solidtime migrate --dry-run --mapping project-task-mapping.csv`.
+5. Run `clockify-to-solidtime migrate --mapping project-task-mapping.csv` only after the dry run looks right.
 
 Optional environment variables:
 
