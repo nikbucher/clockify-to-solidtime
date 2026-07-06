@@ -83,6 +83,7 @@ jobs:
 
             def install
               bin.install "clockify-to-solidtime"
+              generate_completions_from_executable(bin/"clockify-to-solidtime", "completions")
             end
 
             test do

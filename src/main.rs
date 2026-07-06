@@ -1,6 +1,7 @@
 mod api_envelope;
 mod clockify;
 mod compare;
+mod completions;
 mod config;
 mod fingerprint;
 mod http;
@@ -82,6 +83,13 @@ enum Commands {
 		#[arg(long, value_parser = parse_datetime)]
 		to: Option<DateTime<Utc>>,
 	},
+
+	/// Generate a shell completion script for the given shell.
+	Completions {
+		/// Target shell.
+		#[arg(value_enum)]
+		shell: clap_complete::Shell,
+	},
 }
 
 fn parse_datetime(value: &str) -> Result<DateTime<Utc>> {
@@ -93,13 +101,17 @@ fn parse_datetime(value: &str) -> Result<DateTime<Utc>> {
 }
 
 fn main() -> Result<()> {
+	let cli = Cli::parse();
+
+	if let Commands::Completions { shell } = &cli.command {
+		return completions::run(*shell);
+	}
+
 	match dotenvy::dotenv() {
 		Ok(_) => {}
 		Err(err) if err.not_found() => {}
 		Err(err) => return Err(err).context("failed to load .env file"),
 	}
-
-	let cli = Cli::parse();
 
 	match cli.command {
 		Commands::Validate { config } => validate::run(validate::Options { config_path: config }),
@@ -127,5 +139,6 @@ fn main() -> Result<()> {
 			from,
 			to,
 		}),
+		Commands::Completions { .. } => unreachable!("handled before .env load"),
 	}
 }

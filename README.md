@@ -73,6 +73,32 @@ cargo run -- migrate --from 2024-01-01T00:00:00Z --to 2024-02-01T00:00:00Z
 cargo run -- migrate --ignore-archived --from 2024-01-01T00:00:00Z --to 2024-02-01T00:00:00Z
 ```
 
+### Shell Completions
+
+Homebrew installs bash, zsh, and fish completions automatically.
+
+For manual installation, generate a completion script for the target shell:
+
+```sh
+clockify-to-solidtime completions bash | sudo tee /etc/bash_completion.d/clockify-to-solidtime
+```
+
+```zsh
+clockify-to-solidtime completions zsh > "${fpath[1]}/_clockify-to-solidtime"
+```
+
+```fish
+clockify-to-solidtime completions fish > ~/.config/fish/completions/clockify-to-solidtime.fish
+```
+
+```elvish
+clockify-to-solidtime completions elvish > ~/.config/elvish/lib/clockify-to-solidtime.elv
+```
+
+```powershell
+clockify-to-solidtime completions powershell | Out-String | Invoke-Expression
+```
+
 ### Validate
 
 ```sh
