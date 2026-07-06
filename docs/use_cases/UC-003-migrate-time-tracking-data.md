@@ -29,20 +29,20 @@ Configuration values and their sources are the same as UC-001 (Validate Configur
 
 ## Migrated Data
 
-| Clockify data             | Solidtime data            | Migration behavior                                         |
-|---------------------------|---------------------------|------------------------------------------------------------|
-| Client name               | Client name               | Matched by name before a new client is created.            |
-| Project name              | Project name              | Matched by name under the mapped client before creation.   |
-| Project color             | Project color             | Migrated when valid; otherwise a default color is used.    |
-| Project billable flag     | Project billable flag     | Migrated.                                                  |
-| Project estimate          | Project estimated time    | Migrated when present and supported.                       |
-| Task name                 | Task name                 | Matched by name within the mapped project before creation. |
-| Task estimate             | Task estimated time       | Migrated when present and supported.                       |
-| Tag name                  | Tag name                  | Matched by name before a new tag is created.               |
-| Time entry start and end  | Time entry start and end  | Migrated for entries in the selected time range.           |
-| Time entry description    | Time entry description    | Migrated.                                                  |
-| Time entry billable flag  | Time entry billable flag  | Migrated.                                                  |
-| Time entry tag assignment | Time entry tag assignment | Migrated after each tag is matched or created.             |
+| Clockify data             | Solidtime data            | Migration behavior                                             |
+|---------------------------|---------------------------|----------------------------------------------------------------|
+| Client name               | Client name               | Matched by name before a new client is created.                |
+| Project name              | Project name              | Matched by name under the mapped client before creation.       |
+| Project color             | Project color             | Migrated when valid; otherwise a default color is used.        |
+| Project billable flag     | Project billable flag     | Migrated.                                                      |
+| Project estimate          | Project estimated time    | Migrated when present and supported.                           |
+| Task name                 | Task name                 | Matched by name within the mapped project before creation.     |
+| Task estimate             | Task estimated time       | Migrated when present and supported.                           |
+| Tag name                  | Tag name                  | Matched by name before a new tag is created.                   |
+| Time entry start and end  | Time entry start and end  | Migrated for entries in the selected time range.               |
+| Time entry description    | Time entry description    | Migrated.                                                      |
+| Time entry billable flag  | Time entry billable flag  | Migrated.                                                      |
+| Time entry tag assignment | Time entry tag assignment | Migrated after each tag is matched or created.                 |
 
 Billable rates are not migrated.
 
