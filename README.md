@@ -291,6 +291,7 @@ Missing, ambiguous, out-of-project, and conflicting rows stop the command. Canon
 
 ## Advanced and Reference Documentation
 
+- [Vision](docs/vision.md)
 - [Requirements](docs/requirements.md)
 - [Use-case diagram](docs/use_cases.puml)
 - [Use-case specifications](docs/use_cases/)
