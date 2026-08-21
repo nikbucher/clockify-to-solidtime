@@ -25,6 +25,8 @@ clockify-to-solidtime validate
 clockify-to-solidtime compare
 ```
 
+If either command fails, use [Troubleshooting](#troubleshooting) to identify the configuration or connectivity problem before continuing.
+
 Preview a small range (start inclusive, end exclusive):
 
 ```sh
@@ -151,6 +153,26 @@ solidtime_organization_id = "..."
 ```
 
 Precedence is: `--config` file, exported variables, `.env`, then built-in defaults. Advanced deployments may override `CLOCKIFY_BASE_URL` and `SOLIDTIME_BASE_URL`; ordinary users should retain the production defaults in `.env.example`.
+
+## Troubleshooting
+
+`validate` reports the configuration or connectivity problem it found. Dynamic values in the messages below are shown as `<id>`, `<path>`, `<Service>`, `<subject>`, and `<status>`.
+
+| Symptom                                                                                           | Cause                                                                                             | Resolution                                                                                            |
+|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `failed to load .env file`                                                                        | A `.env` file exists in the working directory but cannot be read or parsed.                       | Fix the file's permissions or syntax, or remove it if configuration comes from another source.        |
+| `CLOCKIFY_API_KEY is required` or `SOLIDTIME_API_TOKEN is required`                               | The credential is missing or empty in every configured source.                                    | Set the named value in the `--config` file, environment, or `.env`.                                   |
+| `failed to read config file <path>`                                                               | The path passed to `--config` does not exist or is not readable.                                  | Correct the path and file permissions, or omit `--config` when using environment variables or `.env`. |
+| `failed to parse config file <path>`                                                              | The configuration file is not valid TOML.                                                         | Correct its TOML syntax and use the keys shown in [Configuration](#configuration).                    |
+| `A Clockify workspace must be selected; set CLOCKIFY_WORKSPACE_ID or provide a default workspace` | No workspace ID is configured and the Clockify account has no default workspace.                  | Set `CLOCKIFY_WORKSPACE_ID` to an accessible workspace.                                               |
+| ``Clockify workspace `<id>` is not among your workspaces``                                        | The configured or default workspace ID is not visible to the API key.                             | Check the workspace ID and the API key's account access.                                              |
+| `A Solidtime organization must be selected; set SOLIDTIME_ORGANIZATION_ID`                        | No organization ID is configured and the token does not have exactly one organization membership. | Set `SOLIDTIME_ORGANIZATION_ID` to the intended target organization.                                  |
+| ``Solidtime organization `<id>` is not among your memberships``                                   | The configured organization ID is not visible to the token.                                       | Check the organization ID and the token's memberships.                                                |
+| `<Service> rejected the configured credential; <subject> access could not be confirmed`           | Clockify or Solidtime returned `401 Unauthorized` or `403 Forbidden`.                             | Replace an expired or revoked credential and confirm it grants access to the selected target.         |
+| `<Service> returned <status>; <subject> access could not be confirmed`                            | The service returned an unexpected HTTP status.                                                   | Check the service status and retry; persistent failures may require service-side investigation.       |
+| `<Service> <subject> access could not be confirmed`                                               | The service could not be reached and no HTTP status was received.                                 | Check network access and the configured `CLOCKIFY_BASE_URL` or `SOLIDTIME_BASE_URL`.                  |
+
+For canonical failure scenarios and postconditions, see [UC-001 Validate Configuration](docs/use_cases/UC-001-validate-configuration.md).
 
 ## Safe Migration Workflow
 
