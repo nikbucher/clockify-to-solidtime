@@ -1,31 +1,59 @@
 # Contributing
 
-Contributions are welcome! Please open an issue or pull request on [GitHub](https://github.com/nikbucher/clockify-to-solidtime).
+Contributions are welcome through [GitHub issues and pull requests](https://github.com/nikbucher/clockify-to-solidtime).
 
-## Development Methodology
+## Development Setup
 
-[AIUP](https://aiup.dev) - requirements-driven, iterative. See `docs/` for vision, requirements, and use case specs.
+Install [Rust with rustup](https://www.rust-lang.org/tools/install). The project uses Rust edition 2024 and expects a current stable toolchain with `rustfmt` and `clippy`:
 
-## Code Style
+```sh
+rustup toolchain install stable --component rustfmt --component clippy
+git clone https://github.com/nikbucher/clockify-to-solidtime.git
+cd clockify-to-solidtime
+cargo build
+cargo test
+```
 
-- Follow `.editorconfig` / [rustfmt](https://github.com/rust-lang/rustfmt) (`cargo fmt`)
-- Run `cargo fmt --check` before committing
-- Run `cargo clippy -- -D warnings` for lint checks
+Offline smoke tests do not require credentials or API access:
 
-## Commit Messages
+```sh
+cargo run -- --help
+cargo run -- completions bash > /dev/null
+```
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/).
+Commands other than `completions` contact Clockify or Solidtime after loading configuration. Use test credentials and non-production organizations when manually exercising them.
 
-Format: `<type>[optional scope]: <description>`
+## Project Orientation
 
-Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `build`
+- `src/main.rs` defines the CLI and dispatches subcommands.
+- `src/config.rs` loads configuration.
+- `src/validate.rs`, `src/compare.rs`, `src/migrate.rs`, and `src/completions.rs` implement the use cases.
+- `src/clockify.rs` and `src/solidtime.rs` are the service clients.
+- `src/mapping.rs` and `src/project_mapping.rs` handle persistent state and explicit mappings.
+- `docs/requirements.md` is the requirements catalog.
+- `docs/use_cases.puml` and `docs/use_cases/` define canonical behavior.
+- `docs/migration-design.md` records implementation and idempotency decisions.
 
-## CI Checks
+This project follows the [AI Unified Process](https://aiup.dev). Before changing behavior, review `docs/requirements.md` and the relevant use-case specification. Update those artifacts when the intended behavior changes. Read `docs/entity_model.md` before data-access changes if that artifact exists.
 
-Make sure CI passes before submitting:
+## Checks
+
+Run the same commands as CI before submitting:
 
 ```sh
 cargo fmt --check
 cargo clippy -- -D warnings
 cargo test
 ```
+
+Follow `.editorconfig` and [rustfmt](https://github.com/rust-lang/rustfmt). Keep documentation and examples consistent with the CLI help and use-case specifications.
+
+## Commit Messages
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```text
+<type>[optional scope]: <description>
+```
+
+Common types are `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, and `build`.

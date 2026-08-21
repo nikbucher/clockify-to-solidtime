@@ -2,94 +2,146 @@
 
 [![CI](https://github.com/nikbucher/clockify-to-solidtime/actions/workflows/ci.yml/badge.svg)](https://github.com/nikbucher/clockify-to-solidtime/actions/workflows/ci.yml)
 
-A command-line tool to migrate time tracking data from [Clockify](https://clockify.me) to [Solidtime](https://solidtime.io) through their APIs.
+A command-line tool that migrates time-tracking data from [Clockify](https://clockify.me) to [Solidtime](https://solidtime.io) through their APIs.
 
-## What it does
+It transfers clients, projects, tasks, tags, and time entries while preserving relationships. Dates, durations, descriptions, billable flags, associations, and tags are retained; billable rates are not migrated.
 
-Transfers supported Clockify workspace data to a Solidtime organization:
+The migration is one-way. Archived Clockify projects are included by default, and real migrations are not transactional: writes completed before an error remain in Solidtime. Preview a limited date range first and preserve the state file for retries.
 
-- **Clients and projects** - including project metadata and task structure.
-- **Time entries** - including dates, durations, descriptions, billable flags, project associations, task associations, and tag assignments.
-- **Tags** - matched or created by name.
+## Quick Start
 
-Billable rates are not migrated.
+Homebrew is recommended on macOS and Linux:
 
-## Who it's for
+```sh
+brew install nikbucher/tap/clockify-to-solidtime
+curl -fsSLO https://raw.githubusercontent.com/nikbucher/clockify-to-solidtime/main/.env.example
+cp .env.example .env
+```
 
-Clockify users with API access who want to move to Solidtime without manually recreating clients, projects, tasks, tags, and time entries.
+Edit `.env`, set `CLOCKIFY_API_KEY` and `SOLIDTIME_API_TOKEN`, and never commit it. Then validate the selected accounts and compare their projects:
+
+```sh
+clockify-to-solidtime validate
+clockify-to-solidtime compare
+```
+
+Preview a small range (start inclusive, end exclusive):
+
+```sh
+clockify-to-solidtime migrate --dry-run \
+  --from 2024-01-01 --to 2024-02-01 \
+  --state ./clockify-2024-01-state.json
+```
+
+After reviewing the preview, run the real migration with the same range and state path:
+
+```sh
+clockify-to-solidtime migrate \
+  --from 2024-01-01 --to 2024-02-01 \
+  --state ./clockify-2024-01-state.json
+```
+
+Keep the state file and reuse it for every retry or resumed run. Add `--ignore-archived` to both migration commands if archived projects, their tasks, and their time entries should be excluded.
 
 ## Installation
 
-### Prerequisites
+### Homebrew
 
-- A Clockify account with API access.
-- A Solidtime account with API access.
+```sh
+brew install nikbucher/tap/clockify-to-solidtime
+```
 
-Create a Clockify API key and a Solidtime API token from the account or developer settings in each product, then provide them through environment variables, a `.env` file, or a TOML config file.
+Homebrew also installs bash, zsh, and fish completions.
 
-### Pre-built binaries
+### Release Archives
 
 Download the archive for your platform from [GitHub Releases](https://github.com/nikbucher/clockify-to-solidtime/releases).
 
-| Platform            | Target                      | Archive                                                  |
-|---------------------|-----------------------------|----------------------------------------------------------|
-| Linux x86_64        | `x86_64-unknown-linux-gnu`  | `clockify-to-solidtime-x86_64-unknown-linux-gnu.tar.gz`  |
-| Linux arm64         | `aarch64-unknown-linux-gnu` | `clockify-to-solidtime-aarch64-unknown-linux-gnu.tar.gz` |
-| macOS Intel         | `x86_64-apple-darwin`       | `clockify-to-solidtime-x86_64-apple-darwin.tar.gz`       |
-| macOS Apple silicon | `aarch64-apple-darwin`      | `clockify-to-solidtime-aarch64-apple-darwin.tar.gz`      |
-| Windows x86_64      | `x86_64-pc-windows-msvc`    | `clockify-to-solidtime-x86_64-pc-windows-msvc.zip`       |
-| Windows arm64       | `aarch64-pc-windows-msvc`   | `clockify-to-solidtime-aarch64-pc-windows-msvc.zip`      |
+| Platform            | Archive                                                  |
+|---------------------|----------------------------------------------------------|
+| Linux x86_64        | `clockify-to-solidtime-x86_64-unknown-linux-gnu.tar.gz`  |
+| Linux arm64         | `clockify-to-solidtime-aarch64-unknown-linux-gnu.tar.gz` |
+| macOS Intel         | `clockify-to-solidtime-x86_64-apple-darwin.tar.gz`       |
+| macOS Apple silicon | `clockify-to-solidtime-aarch64-apple-darwin.tar.gz`      |
+| Windows x86_64      | `clockify-to-solidtime-x86_64-pc-windows-msvc.zip`       |
+| Windows arm64       | `clockify-to-solidtime-aarch64-pc-windows-msvc.zip`      |
 
-### Build from source
+On macOS or Linux, replace `<target>` with the archive target:
 
-Requires Rust with edition 2024 support.
+```sh
+mkdir -p "$HOME/.local/bin"
+tar -xzf clockify-to-solidtime-<target>.tar.gz
+install -m 755 clockify-to-solidtime "$HOME/.local/bin/clockify-to-solidtime"
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Add the final line to your shell profile. On Windows, run PowerShell and replace `<target>` with a Windows target:
+
+```powershell
+$InstallDir = Join-Path $HOME ".local\bin"
+New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+Expand-Archive ".\clockify-to-solidtime-<target>.zip" -DestinationPath $InstallDir -Force
+$UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if (($UserPath -split ';') -notcontains $InstallDir) {
+    [Environment]::SetEnvironmentVariable("Path", "$UserPath;$InstallDir", "User")
+}
+$env:Path = "$env:Path;$InstallDir"
+```
+
+### Build from Source
+
+Install [Rust with rustup](https://www.rust-lang.org/tools/install). The project uses Rust edition 2024 and requires a current stable toolchain.
 
 ```sh
 cargo install --git https://github.com/nikbucher/clockify-to-solidtime
 ```
 
-For local development:
+For development:
 
 ```sh
 git clone https://github.com/nikbucher/clockify-to-solidtime.git
 cd clockify-to-solidtime
 cargo build --release
-```
-
-From a source checkout, run commands with `cargo run --`, for example:
-
-```sh
 cargo run -- validate
 ```
 
 ## Configuration
 
-At minimum, provide:
+Create credentials using the service instructions:
+
+- [Clockify API authentication](https://docs.clockify.me/#section/Authentication)
+- [Solidtime API access and token creation](https://docs.solidtime.io/user-guide/access-api)
+
+The portable setup is a `.env` file in the command's working directory. Copy [`.env.example`](.env.example), then set:
+
+```dotenv
+CLOCKIFY_API_KEY=your-clockify-api-key
+SOLIDTIME_API_TOKEN=your-solidtime-api-token
+```
+
+Never commit credentials. This repository ignores `.env` and `config.toml`; verify ignore rules elsewhere.
+
+Clockify uses the account's default workspace unless `CLOCKIFY_WORKSPACE_ID` is set. Solidtime selects automatically only when the token has exactly one organization membership; set `SOLIDTIME_ORGANIZATION_ID` for multiple memberships or to make the intended target explicit.
+
+POSIX environment variables:
 
 ```sh
 export CLOCKIFY_API_KEY="..."
 export SOLIDTIME_API_TOKEN="..."
+export CLOCKIFY_WORKSPACE_ID="..."       # optional
+export SOLIDTIME_ORGANIZATION_ID="..."   # optional
 ```
 
-Optional configuration values:
+PowerShell environment variables:
 
-| Purpose                    | Environment variable        | Config file key             | Default                          |
-|----------------------------|-----------------------------|-----------------------------|----------------------------------|
-| Clockify workspace         | `CLOCKIFY_WORKSPACE_ID`     | `clockify_workspace_id`     | User's default workspace         |
-| Solidtime organization     | `SOLIDTIME_ORGANIZATION_ID` | `solidtime_organization_id` | User's only available membership |
-| Clockify API base URL      | `CLOCKIFY_BASE_URL`         | `clockify_base_url`         | Clockify production API          |
-| Solidtime API base URL     | `SOLIDTIME_BASE_URL`        | `solidtime_base_url`        | Solidtime production API         |
+```powershell
+$env:CLOCKIFY_API_KEY = "..."
+$env:SOLIDTIME_API_TOKEN = "..."
+$env:CLOCKIFY_WORKSPACE_ID = "..."       # optional
+$env:SOLIDTIME_ORGANIZATION_ID = "..."   # optional
+```
 
-Configuration sources are applied in this precedence order:
-
-1. Values in the file passed with `--config <path>`.
-2. Exported environment variables.
-3. Values from a `.env` file in the working directory.
-4. Built-in defaults, when available.
-
-Use [`.env.example`](.env.example) as a template for local `.env` files.
-
-The same keys can be provided via `--config config.toml`:
+Or pass `--config config.toml`:
 
 ```toml
 clockify_api_key = "..."
@@ -98,114 +150,111 @@ clockify_workspace_id = "..."
 solidtime_organization_id = "..."
 ```
 
-`validate`, `compare`, and `migrate` validate configuration before reading or changing migration data. `completions` does not require configuration or network access.
+Precedence is: `--config` file, exported variables, `.env`, then built-in defaults. Advanced deployments may override `CLOCKIFY_BASE_URL` and `SOLIDTIME_BASE_URL`; ordinary users should retain the production defaults in `.env.example`.
 
-## Recommended Workflow
+## Safe Migration Workflow
 
-1. Configure your Clockify and Solidtime credentials.
-2. Run `validate` to check credentials, workspace selection, and organization selection.
-3. Run `compare` to review project and task alignment.
-4. Add a mapping CSV if names are renamed, duplicated, or ambiguous.
-5. Run `migrate --dry-run` to preview writes.
-6. Run `migrate` and review the summary.
+1. Run `validate` and confirm the displayed workspace and organization are the intended source and target.
+2. Run `compare`; add `--mapping` for renamed or ambiguous projects or tasks.
+3. Run `migrate --dry-run` with limited `--from`/`--to` dates and an explicit `--state`. It writes neither Solidtime nor the state file.
+4. Review the summary, then remove only `--dry-run`. Keep the range, mapping, archive choice, and state path unchanged.
+5. Preserve the state file. A real migration writes incrementally and is not transactional. On failure, completed remote writes remain; rerun with the same state file so recorded items are reused.
 
-Use the same `--state` file for repeat or resumed migrations. The default state file is `migration-state.json`.
+Test against the organization you intend to migrate into. Archived Clockify projects are migrated unless `--ignore-archived` is used.
 
-## Use Cases
+Sanitized successful output:
 
-The use-case specs are the canonical behavior reference for full scenarios, edge cases, business rules, and output expectations:
+```text
+Configuration validated
+Clockify workspace: Example Workspace (workspace-example)
+Solidtime organization: Example Organization (organization-example)
+No Clockify data, Solidtime data, or local migration state was changed.
+```
 
-- [UC-001 Validate Configuration](docs/use_cases/UC-001-validate-configuration.md)
-- [UC-002 Compare Project Setup](docs/use_cases/UC-002-compare-project-setup.md)
-- [UC-003 Migrate Time Tracking Data](docs/use_cases/UC-003-migrate-time-tracking-data.md)
-- [UC-004 Generate Shell Completions](docs/use_cases/UC-004-generate-shell-completions.md)
+```text
+Project comparison
 
-## Commands
+Legend: = both, -> Clockify only, <- Solidtime only, ! manual review, A archived
 
-### Validate
+Client: Example Client
++---------+----------+---+-----------+
+| Type    | Clockify |   | Solidtime |
++---------+----------+---+-----------+
+| Project | Website  | = | Website   |
++---------+----------+---+-----------+
+
+Clockify and Solidtime project structures match with no differences.
+
+Summary
++----------+---------+---------------+----------------+---------------+
+| Type     | Matched | Clockify only | Solidtime only | Manual review |
++----------+---------+---------------+----------------+---------------+
+| Projects | 1       | 0             | 0              | 0             |
+| Tasks    | 0       | 0             | 0              | 0             |
++----------+---------+---------------+----------------+---------------+
+```
+
+```text
+Reading Clockify workspace workspace-example and Solidtime organization organization-example
+Dry-run: Solidtime writes and state persistence are disabled
+Migration summary
+  clients: 1 created, 0 reused
+  projects: 1 created, 0 reused, 0 archived, 0 archive failures
+  tasks: 2 created, 0 reused
+  tags: 3 created, 0 reused
+  time entries: 12 created, 0 reused
+```
+
+## Command Reference
+
+### `validate`
 
 ```sh
-clockify-to-solidtime validate
-clockify-to-solidtime validate --config config.toml
+clockify-to-solidtime validate [--config <path>]
 ```
 
-Checks that required configuration is present and that the selected Clockify workspace and Solidtime organization are reachable. It does not change Clockify data, Solidtime data, or local migration state.
+Checks credentials and target selection without changes. See [UC-001](docs/use_cases/UC-001-validate-configuration.md).
 
-Full behavior: [UC-001 Validate Configuration](docs/use_cases/UC-001-validate-configuration.md).
-
-### Compare
+### `compare`
 
 ```sh
-clockify-to-solidtime compare
-clockify-to-solidtime compare --ignore-archived
-clockify-to-solidtime compare --config config.toml --mapping project-task-mapping.csv
+clockify-to-solidtime compare [--config <path>] [--mapping <path>] [--ignore-archived]
 ```
 
-Shows a read-only comparison of Clockify and Solidtime projects and tasks. By default, archived Clockify projects and their tasks are included. Use `--ignore-archived` to exclude them. Use `--mapping` when existing Solidtime projects or tasks should be paired with differently named, duplicated, or ambiguous Clockify projects or tasks.
+Compares projects and tasks without changes. Archived projects are included by default. See [UC-002](docs/use_cases/UC-002-compare-project-setup.md).
 
-Full behavior: [UC-002 Compare Project Setup](docs/use_cases/UC-002-compare-project-setup.md).
-
-### Migrate
+### `migrate`
 
 ```sh
-clockify-to-solidtime migrate --dry-run --from 2024-01-01 --to 2024-02-01
-clockify-to-solidtime migrate --from 2024-01-01 --to 2024-02-01
+clockify-to-solidtime migrate [--dry-run] [--config <path>] [--state <path>] \
+  [--mapping <path>] [--no-create-structure] [--ignore-archived] \
+  [--from <timestamp>] [--to <timestamp>]
 ```
 
-Migrates supported Clockify clients, projects, tasks, tags, and time entries to Solidtime. Use `--dry-run` before a real migration to preview planned creates, reuses, archive actions, and skipped duplicates without writing to Solidtime or the state file.
+| Option                  | Meaning                                             |
+|-------------------------|-----------------------------------------------------|
+| `--dry-run`             | Reconcile without Solidtime or state-file writes.   |
+| `--config <path>`       | Read a TOML configuration file.                     |
+| `--state <path>`        | Select state; default: `migration-state.json`.      |
+| `--mapping <path>`      | Read explicit project/task mappings from CSV.       |
+| `--no-create-structure` | Abort a real run if required structure is missing.  |
+| `--ignore-archived`     | Exclude archived projects, tasks, and time entries. |
+| `--from <timestamp>`    | Inclusive start; default: `2000-01-01T00:00:00Z`.   |
+| `--to <timestamp>`      | Exclusive end; default: current time.               |
 
-Useful options:
+Short dates and RFC3339 timestamps are accepted. See [UC-003](docs/use_cases/UC-003-migrate-time-tracking-data.md).
 
-| Option                  | Use it when                                                                                         |
-|-------------------------|------------------------------------------------------------------------------------------------------|
-| `--state <path>`        | You want to choose the local migration state file instead of `migration-state.json`.                 |
-| `--mapping <path>`      | You need explicit project or task pairings, or a default Solidtime task for untasked Clockify entries. |
-| `--ignore-archived`     | You want to skip archived Clockify projects, their tasks, and their time entries.                    |
-| `--no-create-structure` | Existing Solidtime clients, projects, tasks, and tags must be reused instead of created.             |
-
-`--from` is inclusive and defaults to `2000-01-01T00:00:00Z`. `--to` is exclusive and defaults to the current time. Both options accept a short date such as `2024-01-01` or a full RFC3339 timestamp such as `2024-01-01T00:00:00Z`.
-
-Full behavior: [UC-003 Migrate Time Tracking Data](docs/use_cases/UC-003-migrate-time-tracking-data.md).
-
-### Shell Completions
-
-Homebrew installs bash, zsh, and fish completions automatically. For manual installation, generate a completion script for the target shell:
+### `completions`
 
 ```sh
-clockify-to-solidtime completions bash | sudo tee /etc/bash_completion.d/clockify-to-solidtime
+clockify-to-solidtime completions <bash|zsh|fish|powershell|elvish>
 ```
 
-```zsh
-clockify-to-solidtime completions zsh > "${fpath[1]}/_clockify-to-solidtime"
-```
+Writes a completion script to standard output without configuration or network access. See [UC-004](docs/use_cases/UC-004-generate-shell-completions.md).
 
-```fish
-clockify-to-solidtime completions fish > ~/.config/fish/completions/clockify-to-solidtime.fish
-```
+## Mapping
 
-```elvish
-clockify-to-solidtime completions elvish > ~/.config/elvish/lib/clockify-to-solidtime.elv
-```
-
-```powershell
-clockify-to-solidtime completions powershell | Out-String | Invoke-Expression
-```
-
-Supported shell values are `bash`, `zsh`, `fish`, `powershell`, and `elvish`.
-
-Full behavior: [UC-004 Generate Shell Completions](docs/use_cases/UC-004-generate-shell-completions.md).
-
-## Mapping CSV Basics
-
-Use `--mapping project-task-mapping.csv` with `compare` or `migrate` when default name-based matching is not enough. The filename is only an example; any CSV path can be used.
-
-The recommended header is:
-
-```csv
-Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
-```
-
-Examples:
+Use `--mapping project-task-mapping.csv` when name matching is insufficient:
 
 ```csv
 Clockify_Project,Clockify_Task,Solidtime_Project,Solidtime_Task
@@ -214,45 +263,18 @@ Website Relaunch,QA,Website Relaunch,Testing
 Website Relaunch,,Website Relaunch,General
 ```
 
-The first row maps a renamed project. The second row maps a renamed task within that project. The third row defines a default Solidtime task for Clockify time entries in `Website Relaunch` that do not have a Clockify task.
+These rows map a renamed project, a renamed task, and a default task for untasked entries. Optional `Clockify_Project_ID`, `Clockify_Task_ID`, `Solidtime_Project_ID`, and `Solidtime_Task_ID` columns disambiguate names; IDs take precedence.
 
-Optional ID columns can be added when names are duplicated or ambiguous:
+Missing, ambiguous, out-of-project, and conflicting rows stop the command. Canonical rules are in [UC-002](docs/use_cases/UC-002-compare-project-setup.md) and [UC-003](docs/use_cases/UC-003-migrate-time-tracking-data.md); see also the [sample CSV](docs/examples/project-task-mapping.csv).
 
-- `Clockify_Project_ID`
-- `Clockify_Task_ID`
-- `Solidtime_Project_ID`
-- `Solidtime_Task_ID`
+## Advanced and Reference Documentation
 
-IDs take precedence over their matching name columns. Missing, ambiguous, out-of-project, or conflicting mapping rows stop the command instead of being guessed.
-
-For the detailed mapping rules, see [UC-002 Compare Project Setup](docs/use_cases/UC-002-compare-project-setup.md) and [UC-003 Migrate Time Tracking Data](docs/use_cases/UC-003-migrate-time-tracking-data.md).
-
-## Safe Repeatable Runs
-
-The migration is designed to be safe to re-run where possible. It uses local state, existing Solidtime records, and time-entry matching to avoid creating duplicate migrated data.
-
-For implementation decisions, data mapping, and idempotency details, see [`docs/migration-design.md`](docs/migration-design.md).
-
-## Documentation
-
-- [`docs/requirements.md`](docs/requirements.md)
-- [`docs/use_cases.puml`](docs/use_cases.puml)
-- [`docs/use_cases/`](docs/use_cases/)
-- [`docs/migration-design.md`](docs/migration-design.md)
-
-## Releasing
-
-Create and push a version tag to build and publish release binaries:
-
-```sh
-git tag -a v0.1.0 -m "Release v0.1.0"
-git push origin v0.1.0
-```
-
-## Contributing
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- [Requirements](docs/requirements.md)
+- [Use-case diagram](docs/use_cases.puml)
+- [Use-case specifications](docs/use_cases/)
+- [Migration design and idempotency](docs/migration-design.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## License
 
-MIT - see [`LICENSE`](LICENSE).
+MIT — see [`LICENSE`](LICENSE).
